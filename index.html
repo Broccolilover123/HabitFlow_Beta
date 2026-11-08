@@ -201,6 +201,31 @@
       .nav-btn span:last-child { font-size:12px; }
       .date-chip { font-size:11px; padding:9px 10px; }
     }
+
+    .bottom-nav { max-width:calc(100vw - 24px); overflow-x:auto; }
+    .nav-btn { white-space:nowrap; }
+    .study-grid,.planner-list { display:grid; gap:12px; margin-top:16px; }
+    .study-form { display:grid; gap:10px; margin-top:14px; }
+    .study-form input,.study-form textarea,.study-form select,.planner-form input,.goal-form input { width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--text); font:inherit; }
+    .study-form textarea { min-height:78px; resize:vertical; }
+    .study-card,.planner-item { border:1px solid var(--line); border-radius:14px; padding:14px; background:var(--card); }
+    .study-card { cursor:pointer; min-height:150px; display:grid; place-items:center; text-align:center; }
+    .study-card .study-answer { color:var(--green); font-weight:700; }
+    .study-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .planner-form,.goal-form { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+    .planner-form input:first-child { grid-column:1/-1; }
+    .planner-item { display:flex; align-items:center; gap:10px; }
+    .planner-item .planner-main { flex:1; min-width:0; }
+    .planner-item.done { opacity:.65; }
+    .planner-item.done strong { text-decoration:line-through; }
+    .quiz-option { width:100%; text-align:left; margin-top:8px; padding:12px; border:1px solid var(--line); border-radius:11px; background:var(--bg); color:var(--text); }
+    .quiz-option:disabled { cursor:default; opacity:1; }
+    .quiz-option.correct { border-color:#2e8b57; background:#e7f5eb; }
+    .quiz-option.incorrect { border-color:#c65b5b; background:#fff0f0; }
+    .timer-settings { display:flex; align-items:center; justify-content:center; gap:9px; flex-wrap:wrap; margin-top:14px; }
+    .timer-settings select { padding:9px 12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--text); font:inherit; }
+    .empty-state { padding:18px; border:1px dashed var(--line); border-radius:12px; color:var(--muted); text-align:center; }
+    @media (max-width:720px) { .bottom-nav { left:12px; right:12px; transform:none; justify-content:flex-start; } .nav-btn { padding:10px 12px; } .planner-form,.goal-form { grid-template-columns:1fr; } .planner-form input:first-child { grid-column:auto; } }
   </style>
 </head>
 <body>
@@ -257,6 +282,7 @@
           <div class="card timer-card">
             <p class="eyebrow">Focus session</p>
             <h2>Time to concentrate</h2>
+            <div class="timer-settings"><label for="timerLength" class="small muted">Session length</label><select id="timerLength"><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="25" selected>25 minutes</option><option value="30">30 minutes</option></select></div>
             <div class="timer-ring" id="timerRing">
               <div class="timer-inner"><div class="timer-time" id="timerDisplay">25:00</div><div class="timer-caption" id="timerCaption">Ready when you are</div></div>
             </div>
@@ -275,7 +301,7 @@
               <div class="mini-stat"><strong id="focusSessions">0</strong><span>Sessions completed</span></div>
             </div>
             <div class="session-list">
-              <div class="session-row"><span class="muted small">Session length</span><strong>25 minutes</strong></div>
+              <div class="session-row"><span class="muted small">Session length</span><strong id="sessionLengthLabel">25 minutes</strong></div>
               <div class="session-row"><span class="muted small">Completed today</span><strong id="sessionsToday">0</strong></div>
             </div>
 
@@ -293,8 +319,59 @@
               <div class="music-status" id="musicStatus">Press play to start the built-in lo-fi loop. No YouTube or external music player is used.</div>
             </div>
 
-            <p class="notice">Your progress is saved in this browser on this device.</p>
+            <p class="notice">Your progress is saved in this browser on this device. Cloud sync and login require your Firebase project configuration.</p>
           </div>
+        </div>
+      </section>
+
+
+      <section class="page" id="plannerPage">
+        <p class="eyebrow">Stay organised</p>
+        <h1>Homework planner</h1>
+        <p class="subtitle">Keep track of assignments and deadlines in one place.</p>
+        <div class="card" style="margin-top:24px">
+          <h2>Add an assignment</h2>
+          <form class="planner-form" id="plannerForm">
+            <input id="assignmentTitle" maxlength="90" placeholder="Assignment name" required aria-label="Assignment name">
+            <input id="assignmentSubject" maxlength="40" placeholder="Subject" aria-label="Subject">
+            <input id="assignmentDue" type="date" aria-label="Due date" required>
+            <button class="btn btn-primary" type="submit">+ Add assignment</button>
+          </form>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <div class="card-head"><h2>Your assignments</h2><span class="small muted" id="assignmentCount">0 assignments</span></div>
+          <div class="planner-list" id="assignmentList"></div>
+        </div>
+      </section>
+
+      <section class="page" id="studyPage">
+        <p class="eyebrow">Learn actively</p>
+        <h1>Flashcards & quizzes</h1>
+        <p class="subtitle">Create revision cards, review answers, and test your knowledge.</p>
+        <div class="today-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+          <div class="card">
+            <h2>Create a flashcard</h2>
+            <form class="study-form" id="flashcardForm">
+              <input id="flashQuestion" maxlength="180" placeholder="Question or term" required aria-label="Flashcard question">
+              <textarea id="flashAnswer" maxlength="500" placeholder="Answer or explanation" required aria-label="Flashcard answer"></textarea>
+              <button class="btn btn-primary" type="submit">Add flashcard</button>
+            </form>
+            <div class="session-list"><div class="session-row"><span class="muted small">Cards in your deck</span><strong id="flashcardCount">0</strong></div></div>
+          </div>
+          <div class="card">
+            <h2>Review flashcards</h2>
+            <div id="flashcardViewer" class="study-card"><div class="muted">Add a flashcard to start reviewing.</div></div>
+            <div class="study-actions">
+              <button class="btn btn-secondary" id="previousCard" type="button">Previous</button>
+              <button class="btn btn-primary" id="flipCard" type="button">Show answer</button>
+              <button class="btn btn-secondary" id="nextCard" type="button">Next</button>
+            </div>
+            <p class="muted small" id="cardPosition">No cards yet</p>
+          </div>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <div class="card-head"><div><h2>Knowledge quiz</h2><p class="muted small" style="margin:5px 0 0">Questions are generated from your flashcards.</p></div><button class="btn btn-primary" id="startQuiz" type="button">Start quiz</button></div>
+          <div id="quizArea"><div class="empty-state">Create at least two flashcards to start a quiz.</div></div>
         </div>
       </section>
 
@@ -311,7 +388,17 @@
         <div class="card" style="margin-top:22px">
           <div class="card-head"><div><h2>Study activity</h2><p class="muted small" style="margin:6px 0 0">Minutes studied over the last 7 days</p></div><span class="small muted">Weekly view</span></div>
           <div class="chart" id="weeklyChart"></div>
-          <div class="notice">The chart updates when you complete a 25-minute focus session. No sample data is added.</div>
+          <div class="notice">The chart updates when you complete a focus session. No sample data is added.</div>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <h2>Personal study goals</h2>
+          <p class="muted small">Set targets that fit your schedule.</p>
+          <form class="goal-form" id="goalForm">
+            <label class="small">Daily target (minutes)<input id="dailyGoalInput" type="number" min="5" max="600" step="5" value="60" required></label>
+            <label class="small">Weekly target (minutes)<input id="weeklyGoalInput" type="number" min="15" max="3000" step="15" value="300" required></label>
+            <button class="btn btn-primary" type="submit">Save goals</button>
+          </form>
+          <div class="session-list"><div class="session-row"><span class="muted small">Today's target</span><strong id="dailyGoalStatus">0 / 60 min</strong></div><div class="session-row"><span class="muted small">This week's target</span><strong id="weeklyGoalStatus">0 / 300 min</strong></div></div>
         </div>
       </section>
 
@@ -322,7 +409,7 @@
         <div class="spin-hero" style="margin-top:26px">
           <span class="level-pill">✦ HABITFLOW RNG</span>
           <div class="spin-count"><span id="spinCount">0</span> <span style="font-size:20px;letter-spacing:0">spins</span></div>
-          <p style="color:#e1d8f7;line-height:1.6;margin:0 0 18px">Earn 5 spins for each habit you complete (once per habit each day), plus 5 spins for every completed 25-minute focus session. No paying, no penalties—just progress.</p>
+          <p style="color:#e1d8f7;line-height:1.6;margin:0 0 18px">Earn 5 spins for each habit you complete (once per habit each day), plus 5 spins for every completed focus session. No paying, no penalties—just progress.</p>
           <p class="spin-dust" id="spinDust">Spin fragments: 0.00 / 1.00</p>
           <button class="spin-btn" id="spinButton" type="button">✦ ROLL AURA</button>
           <div class="case-reel" id="caseReel" aria-label="Aura case rolling reel">
@@ -379,6 +466,8 @@
   <nav class="bottom-nav" aria-label="Main navigation">
     <button class="nav-btn active" data-page="todayPage"><span class="nav-icon">☑</span><span>Today</span></button>
     <button class="nav-btn" data-page="focusPage"><span class="nav-icon">◷</span><span>Focus</span></button>
+    <button class="nav-btn" data-page="plannerPage"><span class="nav-icon">▤</span><span>Planner</span></button>
+    <button class="nav-btn" data-page="studyPage"><span class="nav-icon">▧</span><span>Study</span></button>
     <button class="nav-btn" data-page="progressPage"><span class="nav-icon">▥</span><span>Progress</span></button>
     <button class="nav-btn" data-page="rewardsPage"><span class="nav-icon">✦</span><span>Rewards</span></button>
   </nav>
@@ -918,20 +1007,22 @@
     function renderFocusStats() {
       document.getElementById("focusMinutes").textContent = data.totalMinutes;
       document.getElementById("focusSessions").textContent = data.totalSessions;
-      document.getElementById("sessionsToday").textContent = Math.floor(currentStudyMinutes() / 25);
+      document.getElementById("sessionsToday").textContent = (data.sessionsByDate || {})[todayKey()] || 0;
       document.getElementById("statsMinutes").textContent = `${data.totalMinutes} min`;
       document.getElementById("statsSessions").textContent = data.totalSessions;
       document.getElementById("todayStudy").textContent = `${currentStudyMinutes()} min`;
     }
 
-    let remaining = 25 * 60;
+    let sessionDuration = Number(localStorage.getItem("habitflow-session-length") || 25);
+    if (![10,15,25,30].includes(sessionDuration)) sessionDuration = 25;
+    let remaining = sessionDuration * 60;
     let timerId = null;
     let endTime = null;
     function drawTimer() {
       const mins = Math.floor(remaining / 60).toString().padStart(2, "0");
       const secs = Math.floor(remaining % 60).toString().padStart(2, "0");
       document.getElementById("timerDisplay").textContent = `${mins}:${secs}`;
-      document.getElementById("timerRing").style.setProperty("--ring", `${remaining / 1500 * 100}%`);
+      document.getElementById("timerRing").style.setProperty("--ring", `${remaining / (sessionDuration * 60) * 100}%`);
       document.getElementById("startBtn").disabled = timerId !== null || remaining === 0;
       document.getElementById("pauseBtn").disabled = timerId === null;
     }
@@ -939,11 +1030,13 @@
       remaining = 0;
       data.totalSessions += 1;
       gacha.spins += 5; saveGacha();
-      data.totalMinutes += 25;
-      data.studyByDate[todayKey()] = currentStudyMinutes() + 25;
+      data.totalMinutes += sessionDuration;
+      data.studyByDate[todayKey()] = currentStudyMinutes() + sessionDuration;
+      data.sessionsByDate = data.sessionsByDate || {};
+      data.sessionsByDate[todayKey()] = (data.sessionsByDate[todayKey()] || 0) + 1;
       save();
       document.getElementById("timerCaption").textContent = "Session complete — well done";
-      renderFocusStats(); renderHabits(); renderChart(); renderRewards(); drawTimer();
+      renderFocusStats(); renderHabits(); renderChart(); renderRewards(); drawTimer(); renderGoals();
     }
     function tick() {
       remaining = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
@@ -1079,18 +1172,154 @@
       });
     }
 
+
+    // Homework planner: stored locally on this device.
+    const PLANNER_KEY = "habitflow-assignments-v1";
+    let assignments = [];
+    try { assignments = JSON.parse(localStorage.getItem(PLANNER_KEY)) || []; } catch { assignments = []; }
+    function saveAssignments() { localStorage.setItem(PLANNER_KEY, JSON.stringify(assignments)); }
+    function renderAssignments() {
+      const list = document.getElementById("assignmentList");
+      if (!list) return;
+      list.innerHTML = "";
+      document.getElementById("assignmentCount").textContent = `${assignments.length} assignment${assignments.length === 1 ? "" : "s"}`;
+      if (!assignments.length) { list.innerHTML = '<div class="empty-state">No assignments yet. Add your first homework task above.</div>'; return; }
+      assignments.sort((a,b) => (a.due || "").localeCompare(b.due || ""));
+      assignments.forEach(item => {
+        const row = document.createElement("div"); row.className = "planner-item" + (item.done ? " done" : "");
+        const check = document.createElement("input"); check.type = "checkbox"; check.checked = !!item.done; check.setAttribute("aria-label", "Mark assignment complete");
+        check.addEventListener("change", () => { item.done = check.checked; saveAssignments(); renderAssignments(); });
+        const main = document.createElement("div"); main.className = "planner-main";
+        const title = document.createElement("strong"); title.textContent = item.title;
+        const meta = document.createElement("div"); meta.className = "muted small"; meta.textContent = `${item.subject || "General"} · Due ${item.due}`;
+        main.append(title,meta);
+        const remove = document.createElement("button"); remove.className = "btn btn-quiet"; remove.type = "button"; remove.textContent = "Delete"; remove.addEventListener("click", () => { assignments = assignments.filter(a => a.id !== item.id); saveAssignments(); renderAssignments(); });
+        row.append(check,main,remove); list.appendChild(row);
+      });
+    }
+    document.getElementById("plannerForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const title = document.getElementById("assignmentTitle").value.trim();
+      const due = document.getElementById("assignmentDue").value;
+      if (!title || !due) return;
+      assignments.push({id: "task-" + Date.now(), title, subject: document.getElementById("assignmentSubject").value.trim(), due, done:false});
+      saveAssignments(); renderAssignments(); event.target.reset();
+    });
+
+    // Flashcards and quiz: cards are saved in local browser storage.
+    const FLASH_KEY = "habitflow-flashcards-v1";
+    let flashcards = [];
+    try { flashcards = JSON.parse(localStorage.getItem(FLASH_KEY)) || []; } catch { flashcards = []; }
+    let currentCardIndex = 0, showingAnswer = false, quizQuestions = [], quizIndex = 0, quizScore = 0, quizAnswered = false;
+    function saveFlashcards() { localStorage.setItem(FLASH_KEY, JSON.stringify(flashcards)); }
+    function renderFlashcard() {
+      const viewer = document.getElementById("flashcardViewer");
+      document.getElementById("flashcardCount").textContent = flashcards.length;
+      if (!flashcards.length) { viewer.innerHTML = '<div class="muted">Add a flashcard to start reviewing.</div>'; document.getElementById("cardPosition").textContent = "No cards yet"; return; }
+      currentCardIndex = (currentCardIndex + flashcards.length) % flashcards.length;
+      const card = flashcards[currentCardIndex];
+      viewer.innerHTML = "";
+      const label = document.createElement("div"); label.className = "eyebrow"; label.textContent = showingAnswer ? "ANSWER" : "QUESTION";
+      const content = document.createElement("div"); content.className = showingAnswer ? "study-answer" : ""; content.textContent = showingAnswer ? card.answer : card.question;
+      viewer.append(label,content);
+      document.getElementById("cardPosition").textContent = `Card ${currentCardIndex + 1} of ${flashcards.length}`;
+      document.getElementById("flipCard").textContent = showingAnswer ? "Show question" : "Show answer";
+    }
+    document.getElementById("flashcardForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const question = document.getElementById("flashQuestion").value.trim();
+      const answer = document.getElementById("flashAnswer").value.trim();
+      if (!question || !answer) return;
+      flashcards.push({id:"fc-" + Date.now(),question,answer}); saveFlashcards(); event.target.reset(); currentCardIndex = flashcards.length - 1; showingAnswer = false; renderFlashcard();
+      document.getElementById("quizArea").innerHTML = '<div class="empty-state">Your deck is ready. Select Start quiz when you have at least two cards.</div>';
+    });
+    document.getElementById("previousCard").addEventListener("click", () => { if (!flashcards.length) return; currentCardIndex--; showingAnswer=false; renderFlashcard(); });
+    document.getElementById("nextCard").addEventListener("click", () => { if (!flashcards.length) return; currentCardIndex++; showingAnswer=false; renderFlashcard(); });
+    document.getElementById("flipCard").addEventListener("click", () => { if (!flashcards.length) return; showingAnswer=!showingAnswer; renderFlashcard(); });
+    function renderQuizQuestion() {
+      const area = document.getElementById("quizArea"); area.innerHTML = "";
+      if (quizIndex >= quizQuestions.length) {
+        const result = document.createElement("div"); result.className = "empty-state"; result.textContent = `Quiz complete. You scored ${quizScore} out of ${quizQuestions.length}.`;
+        const retry = document.createElement("button"); retry.type="button"; retry.className="btn btn-primary"; retry.style.marginTop="12px"; retry.textContent="Try again"; retry.addEventListener("click", startQuiz);
+        area.append(result,retry); return;
+      }
+      const q = quizQuestions[quizIndex];
+      const count = document.createElement("p"); count.className="muted small"; count.textContent=`Question ${quizIndex+1} of ${quizQuestions.length}`;
+      const question = document.createElement("h2"); question.textContent=q.question;
+      const feedback = document.createElement("p"); feedback.className="small"; feedback.id="quizFeedback";
+      area.append(count,question);
+      q.options.forEach(option => {
+        const button=document.createElement("button"); button.type="button"; button.className="quiz-option"; button.textContent=option;
+        button.addEventListener("click", () => {
+          if (quizAnswered) return; quizAnswered=true;
+          const correct=option===q.answer; if(correct) quizScore++;
+          button.classList.add(correct?"correct":"incorrect");
+          [...area.querySelectorAll(".quiz-option")].forEach(b=>{b.disabled=true;if(b.textContent===q.answer)b.classList.add("correct");});
+          feedback.textContent=correct?"Correct!":"Not quite. Review the correct answer highlighted above.";
+          const next=document.createElement("button"); next.type="button"; next.className="btn btn-primary"; next.style.marginTop="12px"; next.textContent=quizIndex===quizQuestions.length-1?"See results":"Next question"; next.addEventListener("click",()=>{quizIndex++;quizAnswered=false;renderQuizQuestion();});
+          area.append(feedback,next);
+        });
+        area.appendChild(button);
+      });
+    }
+    function startQuiz() {
+      if (flashcards.length < 2) { document.getElementById("quizArea").innerHTML='<div class="empty-state">Add at least two flashcards before starting a quiz.</div>'; return; }
+      quizQuestions = [...flashcards].sort(()=>Math.random()-.5).map(card => {
+        const distractors = flashcards.filter(other=>other.id!==card.id).map(other=>other.answer).sort(()=>Math.random()-.5).slice(0,3);
+        const options = [card.answer,...distractors].sort(()=>Math.random()-.5);
+        return {question:card.question,answer:card.answer,options};
+      });
+      quizIndex=0;quizScore=0;quizAnswered=false;renderQuizQuestion();
+    }
+    document.getElementById("startQuiz").addEventListener("click", startQuiz);
+    renderFlashcard(); renderAssignments();
+
+    // Personal goals are stored separately so existing HabitFlow data is preserved.
+    const GOALS_KEY = "habitflow-study-goals-v1";
+    let studyGoals = {daily:60,weekly:300};
+    try { studyGoals = {...studyGoals,...JSON.parse(localStorage.getItem(GOALS_KEY) || "{}")} } catch {}
+    document.getElementById("dailyGoalInput").value = studyGoals.daily;
+    document.getElementById("weeklyGoalInput").value = studyGoals.weekly;
+    function renderGoals() {
+      const daily = studyGoals.daily || 60, weekly = studyGoals.weekly || 300;
+      let weekMinutes = 0;
+      for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);weekMinutes += data.studyByDate[todayKey(d)] || 0;}
+      document.getElementById("dailyGoalStatus").textContent = `${currentStudyMinutes()} / ${daily} min`;
+      document.getElementById("weeklyGoalStatus").textContent = `${weekMinutes} / ${weekly} min`;
+    }
+    document.getElementById("goalForm").addEventListener("submit", event => {
+      event.preventDefault();
+      studyGoals.daily = Math.max(5,Math.min(600,Number(document.getElementById("dailyGoalInput").value)||60));
+      studyGoals.weekly = Math.max(15,Math.min(3000,Number(document.getElementById("weeklyGoalInput").value)||300));
+      localStorage.setItem(GOALS_KEY,JSON.stringify(studyGoals)); renderGoals();
+    });
+
+    document.getElementById("timerLength").value = String(sessionDuration);
+    document.getElementById("timerLength").addEventListener("change", event => {
+      if (timerId !== null) { event.target.value = String(sessionDuration); return; }
+      sessionDuration = Number(event.target.value);
+      localStorage.setItem("habitflow-session-length",String(sessionDuration));
+      remaining = sessionDuration * 60;
+      document.getElementById("sessionLengthLabel").textContent = `${sessionDuration} minutes`;
+      document.getElementById("timerCaption").textContent = "Ready when you are";
+      drawTimer();
+    });
+
     document.querySelectorAll(".nav-btn").forEach(button => {
       button.addEventListener("click", () => {
         document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b === button));
         document.querySelectorAll(".page").forEach(page => page.classList.toggle("active", page.id === button.dataset.page));
-        if (button.dataset.page === "progressPage") { renderHabits(); renderFocusStats(); renderChart(); }
+        if (button.dataset.page === "progressPage") { renderHabits(); renderFocusStats(); renderChart(); renderGoals(); }
+        if (button.dataset.page === "plannerPage") renderAssignments();
+        if (button.dataset.page === "studyPage") renderFlashcard();
         if (button.dataset.page === "rewardsPage") { renderRewards(); }
       });
     });
 
 
     document.getElementById("dateChip").textContent = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-    renderHabits(); renderFocusStats(); renderChart(); renderRewards(); drawTimer();
+    document.getElementById("sessionLengthLabel").textContent = `${sessionDuration} minutes`;
+    renderHabits(); renderFocusStats(); renderChart(); renderRewards(); drawTimer(); renderGoals();
   </script>
 </body>
 </html>
